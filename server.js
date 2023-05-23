@@ -1,42 +1,43 @@
+// CommonJS Syntax
 const express = require("express")
+
+// Declaring controllers
+const friendsCtrl = require("./controllers/friends.controller")
+const messagesCtrl = require("./controllers/messages.controller")
+
 const app = express();
 
 const PORT = 3000;
 
-const friends = [
-    {
-        id: 1,
-        name: "Sir Isaac Newton"
-    },
-    {
-        id: 2,
-        name: "Albert Einstein"
-    }
-]
+// Declaring middlewares
+// Catching request's middleware and time to response.
+app.use((req, res, next) => {
+    const start = Date.now();
+    console.debug(`Incoming method: ${req.method} from ${req.url}`);
+    // This will execute the next Middleware or if not, the next METHOD available given the url (stream of water effect)
+    next();
+    // Actions go here
+    const delta = Date.now() - start;
+    console.log(`Amount of time passed from starting Middleware to endpoint reach and response: ${delta} ms`);
+});
+
+// Parse body parameters to JSON.
+app.use(express.json());
+
+// Endpoints
 app.get("/", (req, res) => {
     res.send("Hello world from express!")
 })
 
-app.get("/cheers", (req, res) => {
-    res.send('<h1> Hello Alberto Balsam, how was your day?</h1>')
-})
+app.get('/messages', messagesCtrl.getMessages)
+app.post('/messages', messagesCtrl.postMsg)
 
-app.get("/friends", (req, res) => {
-    res.json(friends);
-})
+app.get('/friends', friendsCtrl.fetchFriends)
+app.post('/friends/create', friendsCtrl.createFriend)
+app.get('/friends/:friendId', friendsCtrl.getFriend)
 
-app.get("/friends/:friendId", (req, res) => {
-    const fId = req.params.friendId;
-    console.log(`Friend ID: ${fId}`)
-    const friend = friends.find(e => e.id == fId);
-    if (friend) {
-        res.status(200).json({ data: friend, sucess: true })
-    } else {
-        console.log(`Friend not found.`)
-        res.status(404).json({ message: "FRIEND_NOT_FOUND", sucess: false })
-    }
-})
+
 
 app.listen(PORT, () => {
-    console.log(`Express listening on port: ${PORT} ...`)
+    console.log(`Express app listening on port: ${PORT} ...`)
 });
